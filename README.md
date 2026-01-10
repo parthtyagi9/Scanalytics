@@ -1,2 +1,2 @@
 # deltahacks
-Repo for Deltahacks '26
+Repo for Deltahacks '26.
