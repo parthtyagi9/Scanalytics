@@ -1,4 +1,4 @@
-# 🔮 AI-Native Custom Analytics Platform
+# Scanalytics: AI-Native Custom Analytics Platform
 
 ![Status](https://img.shields.io/badge/Status-Prototype-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
