@@ -4,10 +4,10 @@ from sqlalchemy import text
 from database import get_db, engine 
 import models, schemas
 import uuid
-# Import both agents
 from ai_engine import generate_insights, chat_with_analyst
-from typing import List, Dict, Any
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import random
 
 # --- CRITICAL FIX: ENABLE EXTENSION FIRST ---
@@ -17,29 +17,58 @@ with engine.connect() as connection:
     connection.commit()
 
 models.Base.metadata.create_all(bind=engine)
-# --------------------------------------------
-
 app = FastAPI()
+# --------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (good for hackathons)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (POST, GET, OPTIONS, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
-# --- NEW: CHAT ENDPOINT REQUEST MODEL ---
+
+# --- NEW: SCHEMAS TO MATCH YOUR FRONTEND JSON ---
+class TextPart(BaseModel):
+    type: str
+    text: str
+
+class FrontendMessage(BaseModel):
+    role: str # "user" or "assistant"
+    parts: List[TextPart] # The nested structure you showed me
+
 class ChatRequest(BaseModel):
-    messages: List[Dict[str, str]] # e.g. [{"role": "user", "content": "Hi"}]
+    # This matches the {"id": "...", "messages": [...], "trigger": "..."} format
+    id: Optional[str] = None
+    trigger: Optional[str] = None 
+    messages: List[FrontendMessage]
 
-# --- 0. THE ANALYST CHAT ENDPOINT ---
+# --- 0. THE ANALYST CHAT ENDPOINT (UPDATED) ---
 @app.post("/api/chat-analyst")
 def chat_analyst(request: ChatRequest):
-    """
-    Frontend calls this to talk to the AI Analyst.
-    Returns: { ai_message, suggested_metrics, is_ready_to_create }
-    """
     try:
-        # Pass the conversation history to the AI
-        response_data = chat_with_analyst(request.messages)
+        # --- PARSING LOGIC: Frontend JSON -> OpenAI Format ---
+        clean_history = []
+        
+        for msg in request.messages:
+            # Join all text parts together (in case there are multiple)
+            full_text = "".join([p.text for p in msg.parts if p.type == 'text'])
+            
+            # Map "model" role to "assistant" if your frontend sends "model"
+            role = "assistant" if msg.role == "model" else msg.role
+            
+            clean_history.append({"role": role, "content": full_text})
+        
+        # Now pass the clean list to the engine
+        response_data = chat_with_analyst(clean_history)
         return response_data
+        
     except Exception as e:
+        print(f"Chat Endpoint Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- 1. ONBOARDING ENDPOINT (Accepts Metrics Plan) ---
+
+# --- 1. ONBOARDING ENDPOINT ---
 @app.post("/api/onboarding", response_model=schemas.ProjectResponse)
 def create_project(project_data: schemas.ProjectCreate, db: Session = Depends(get_db)):
     # 1. Create the Project
@@ -62,7 +91,7 @@ def create_project(project_data: schemas.ProjectCreate, db: Session = Depends(ge
         {"name": "video_play", "props": {"title": "Demo Video B", "duration": 300, "user_type": "premium"}},
         {"name": "subscription", "props": {"plan": "premium", "price": 19.99}},
         {"name": "error", "props": {"code": 500, "message": "Crash"}},
-        {"name": "cart_checkout", "props": {"amount": 45.50, "items": 3}}, # Added variety for chat demo
+        {"name": "cart_checkout", "props": {"amount": 45.50, "items": 3}},
     ]
 
     for _ in range(30):
@@ -75,7 +104,7 @@ def create_project(project_data: schemas.ProjectCreate, db: Session = Depends(ge
         db.add(db_event)
     db.commit()
 
-    # --- 3. DEMO MAGIC: AUTO-TRIGGER AI (With The Plan!) ---
+    # --- 3. DEMO MAGIC: AUTO-TRIGGER AI ---
     print(f"🧠 DEMO MODE: Triggering AI Analysis...")
     
     recent_events = db.query(models.Event).filter(
@@ -84,8 +113,7 @@ def create_project(project_data: schemas.ProjectCreate, db: Session = Depends(ge
     
     sample_data = [{"event": e.event_name, "props": e.properties} for e in recent_events]
     
-    # --- CRITICAL CHANGE: Pass the 'approved_metrics' to the AI ---
-    # Convert Pydantic models to list of dicts if they exist
+    # Check if approved metrics exist and convert them
     approved_metrics_dicts = []
     if project_data.approved_metrics:
         approved_metrics_dicts = [m.model_dump() for m in project_data.approved_metrics]
@@ -94,7 +122,7 @@ def create_project(project_data: schemas.ProjectCreate, db: Session = Depends(ge
         new_project.name, 
         new_project.description, 
         sample_data,
-        approved_metrics_dicts # <--- The plan from the chat goes here
+        approved_metrics_dicts
     )
     
     for insight in ai_insights:
@@ -178,7 +206,7 @@ def get_dashboard(x_api_key: str = Header(None), db: Session = Depends(get_db)):
         "widgets": widgets
     }
 
-# --- 4. GENERATE INSIGHTS (Manual Trigger) ---
+# --- 4. MANUAL TRIGGER (Optional) ---
 @app.post("/api/generate-insights")
 def trigger_ai_analysis(x_api_key: str = Header(None), db: Session = Depends(get_db)):
     project = db.query(models.Project).filter(models.Project.api_key == x_api_key).first()
@@ -194,7 +222,6 @@ def trigger_ai_analysis(x_api_key: str = Header(None), db: Session = Depends(get
 
     sample_data = [{"event": e.event_name, "props": e.properties} for e in recent_events]
 
-    print(f"Asking Gemini to analyze {len(sample_data)} events for {project.name}...")
     ai_insights = generate_insights(project.name, project.description, sample_data)
 
     db.query(models.InsightConfig).filter(models.InsightConfig.project_id == project.id).delete()
