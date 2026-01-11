@@ -1,6 +1,7 @@
 import Hero from "@/components/Hero";
 import Features from "@/components/sections/Features";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/ui/Logo";
 import { ScanSearchIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -27,10 +28,7 @@ export default function Home() {
           <Hero />
           <div className="pointer-events-none fixed top-0 left-0 w-svw h-svh z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.40)_0%,transparent_100%)]" />
           <nav className="absolute top-2 w-full max-w-7xl left-1/2 -translate-x-1/2 flex justify-between items-center">
-            <div className="flex items-center justify-center gap-2">
-              <ScanSearchIcon />
-              <h1 className="text-2xl font-bold">Scanalytics</h1>
-            </div>
+            <Logo />
             <ul className="flex items-center justify-center gap-12">
               {links.map((link) => (
                 <li key={link.title}>
