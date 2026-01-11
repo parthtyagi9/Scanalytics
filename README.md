@@ -13,7 +13,7 @@ Traditional analytics tools (Google Analytics, Mixpanel) force you to adapt your
 
 ---
 
-## ⚡ How It Works
+## How It Works
 
 1.  **Describe:** You tell us about your product (e.g., *"We are a Netflix for Cats"*).
 2.  **Generate:** Our AI Architect builds a custom JavaScript SDK for you (e.g., `analytics.trackCatMeow()`).
@@ -22,7 +22,7 @@ Traditional analytics tools (Google Analytics, Mixpanel) force you to adapt your
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
@@ -34,7 +34,7 @@ Traditional analytics tools (Google Analytics, Mixpanel) force you to adapt your
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The system relies on a **"Generic Storage, Custom Interface"** design:
 
