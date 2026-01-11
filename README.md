@@ -12,7 +12,7 @@
 
 > **"The analytics platform that adapts to you, not the other way around."**
 
-Traditional analytics tools (Google Analytics, Mixpanel) force you to adapt your data to their schema. We invert the process. You describe your business, and our AI generates a **custom-tailored SDK** and **automatically builds a dashboard** relevant to your specific goals.
+Traditional analytics tools (such as Google Analytics, Mixpanel) force you to adapt your data to their schema. We invert the process. You describe your business, and our AI generates a **custom-tailored SDK** and **automatically builds a dashboard** relevant to your specific goals.
 
 ---
 
