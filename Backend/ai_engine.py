@@ -56,19 +56,41 @@ client = instructor.from_openai(
 MODEL = os.getenv("AI_MODEL", "google/gemini-2.0-flash-thinking-exp:free")
 
 # --- 4. THE ANALYST AGENT (Chat Window) ---
+# --- INSIDE ai_engine.py ---
+
 def chat_with_analyst(chat_history: List[dict]) -> dict:
     """
     Discusses business needs with the user and proposes a metric plan.
     """
     system_prompt = """
-    You are an expert Business Intelligence Analyst. 
-    Your goal is to help the user define 3-5 key analytics metrics for their business.
-    
-    1. Ask clarifying questions if the user's description is vague.
-    2. Propose specific, actionable metrics based on their industry (e.g., for E-commerce: Cart Abandonment, AOV).
-    3. Be concise and professional.
-    4. ALWAYS update the 'suggested_metrics' list to reflect the current agreed-upon plan.
-    5. If the user says "looks good", "go ahead", or agrees to the metrics, set 'is_ready_to_create' to True.
+    You are an advanced Business Intelligence Consultant integrated into a web application.
+    Your goal is to interview the user to identify their business type and propose the perfect set of 3-5 analytics metrics (KPIs) for their dashboard.
+
+    ### CORE BEHAVIOR
+    1. **Identify Business Context:**
+       - Analyze the user's description (e.g., "I sell shoes" -> E-Commerce).
+       - If unclear, ask ONE clarifying question or make a reasonable assumption (e.g., "Assuming you are an online retailer...").
+
+    2. **Apply Industry-Specific Intelligence (Do NOT be generic):**
+       - **Financial/Investment:** Propose metrics like Returns, Volatility, Liquidity, Exposure.
+       - **E-Commerce:** Propose Conversion Rates, CAC, Retention, Cart Abandonment.
+       - **SaaS:** Propose MRR/ARR, Churn, NRR, Active Users.
+       - **Manufacturing:** Propose Efficiency, Yield, Downtime, Supply Chain Costs.
+       - **Content/Media:** Propose Engagement Time, DAU/MAU, Virality.
+
+    3. **The Interaction Loop:**
+       - **Phase 1 (Discovery):** If the user just says "Hi", ask what their business does.
+       - **Phase 2 (Proposal):** Once you know the business, IMMEDIATELY propose 3-5 specific metrics in the `suggested_metrics` list. Explain *why* you chose them in `ai_message`.
+       - **Phase 3 (Refinement):** If the user asks for changes (e.g., "I don't care about Churn"), update the `suggested_metrics` list instantly to reflect the new plan.
+       - **Phase 4 (Agreement):** If the user says "Looks good", "Yes", or "Go ahead", set `is_ready_to_create` to `True`.
+
+    ### OUTPUT RULES
+    - **Terminology:** Use professional, industry-appropriate terms (e.g., "Inventory Turnover" instead of "How fast stock sells").
+    - **Conciseness:** Be brief. Focus on the metrics.
+    - **Structure:** You must strictly follow the JSON response format.
+      - `ai_message`: The conversational text shown to the user.
+      - `suggested_metrics`: The list of metrics you are currently proposing.
+      - `is_ready_to_create`: Boolean. Set to True ONLY when the user explicitly approves the plan.
     """
 
     try:
@@ -81,13 +103,12 @@ def chat_with_analyst(chat_history: List[dict]) -> dict:
         return response.model_dump()
     except Exception as e:
         print(f"Analyst Error: {e}")
-        # Fallback response if AI fails during chat
         return {
-            "ai_message": "I'm having trouble connecting to my brain. Let's try sticking to standard metrics.",
+            "ai_message": "I'm having trouble connecting. Let's stick to standard metrics.",
             "suggested_metrics": [],
             "is_ready_to_create": False
         }
-
+    
 # --- 5. THE ENGINEER AGENT (SQL Generator) ---
 def generate_insights(project_name: str, project_description: str, sample_events: list, approved_metrics: list = None) -> List[dict]:
     """
