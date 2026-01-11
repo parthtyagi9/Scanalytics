@@ -1,9 +1,9 @@
-fastapi
-uvicorn
-sqlalchemy
+fastapi>=0.100.0
+uvicorn>=0.20.0
+sqlalchemy>=2.0.0
 psycopg2-binary
-openai
+openai>=1.0.0,<2.0.0
+instructor>=1.0.0
+pydantic>=2.0.0
 python-dotenv
-instructor
-pydantic
 requests
