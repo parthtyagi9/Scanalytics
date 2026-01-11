@@ -8,11 +8,13 @@ import {
   Terminal,
   HardDrive,
   Download,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 interface SuccessClientProps {
   initialCode: string;
@@ -57,12 +59,20 @@ export default function SuccessClient({ initialCode }: SuccessClientProps) {
             </div>
           </div>
 
-          <Button
-            onClick={copyToClipboard}
-            className="bg-white text-black font-bold rounded-none hover:bg-secondary transition-all px-8 border-2 border-white"
-          >
-            <Copy className="mr-2 w-4 h-4" /> Copy_Buffer
-          </Button>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard">
+              <Button variant={"secondary"}>
+                <ArrowRight />
+                To Dashboard
+              </Button>
+            </Link>
+            <Button
+              onClick={copyToClipboard}
+              className="font-bold rounded-none hover:bg-secondary transition-all px-8 border-2"
+            >
+              <Copy className="mr-2 w-4 h-4" /> Copy_Buffer
+            </Button>
+          </div>
         </div>
 
         {/* Code Workspace */}
