@@ -87,7 +87,7 @@ export default function ChatPage() {
             />
             <Button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2"
+              className="absolute right-0 top-0 bottom-0 h-12 w-12"
             >
               <Send className="w-4 h-4" />
             </Button>
