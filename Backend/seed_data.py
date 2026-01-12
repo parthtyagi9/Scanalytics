@@ -1,46 +1,63 @@
-import requests
-import random
-import time
-import dotenv
-import os
+import psycopg2
+import json
+import uuid
 
-from dotenv import load_dotenv
-load_dotenv()
+# UPDATED CONFIG FOR YOUR DOCKER CONTAINER
+DB_CONFIG = {
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "DeltaHacks26", # Your Docker environment variable
+    "host": "localhost",
+    "port": "5432"
+}
 
-# --- CONFIGURATION ---
-API_URL = "http://127.0.0.1:8000/api/track"
-API_KEY = os.getenv("OPENROUTER_API_KEY")
-
-# --- FAKE DATA GENERATOR ---
-events = [
-    {"name": "video_play", "props": {"title": "Birds 4K", "duration": 300, "user_type": "free"}},
-    {"name": "video_play", "props": {"title": "Mouse Hunt", "duration": 120, "user_type": "premium"}},
-    {"name": "video_play", "props": {"title": "Birds 4K", "duration": 10, "user_type": "free"}}, # Short watch
-    {"name": "subscription", "props": {"plan": "premium", "price": 9.99, "currency": "USD"}},
-    {"name": "error", "props": {"code": 500, "message": "Server crash", "browser": "Chrome"}},
-    {"name": "click", "props": {"button": "signup_header", "screen": "homepage"}},
-]
-
-print(f"Sending 30 fake events to {API_URL}...")
-
-for i in range(30):
-    event = random.choice(events)
-    payload = {
-        "event_name": event["name"],
-        "properties": event["props"]
-    }
-    
+def seed_pizza_shop():
     try:
-        r = requests.post(
-            API_URL, 
-            json=payload, 
-            headers={"x-api-key": API_KEY}
-        )
-        if r.status_code == 200:
-            print(f"[{i+1}/30] Sent {event['name']}")
-        else:
-            print(f"[{i+1}/30] Failed: {r.text}")
-    except Exception as e:
-        print(f"Error: {e}")
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
 
-print("\n✨ Data Seeding Complete!")
+        # 1. Create the Project (Tony's Pizza)
+        # We use ON CONFLICT to avoid errors if you run this script twice
+        pizza_id = '550e8400-e29b-41d4-a716-446655440000'
+        cur.execute("""
+            INSERT INTO projects (id, name, description, api_key)
+            VALUES (%s, 'Tony Pizza Shop', 'Dine-in/Delivery analytics', 'pizza-key-123')
+            ON CONFLICT (id) DO NOTHING;
+        """, (pizza_id,))
+
+        # 2. Define 10 specific events to match your hardcoded cardData
+        # These will allow you to calculate Revenue, Delivery Time, Retention, and Food Cost
+        events = [
+            ("order_completed", {"revenue": 34.50, "cost": 6.21, "type": "dine_in"}),
+            ("order_completed", {"revenue": 42.00, "cost": 7.56, "type": "delivery"}),
+            ("order_completed", {"revenue": 28.00, "cost": 5.04, "type": "dine_in"}),
+            ("order_completed", {"revenue": 55.00, "cost": 9.90, "type": "delivery"}),
+            ("delivery_dispatched", {"time_minutes": 48}),
+            ("delivery_dispatched", {"time_minutes": 52}),
+            ("delivery_dispatched", {"time_minutes": 44}),
+            ("user_session", {"user_id": "cust_1", "is_returning": True}),
+            ("user_session", {"user_id": "cust_2", "is_returning": False}),
+            ("user_session", {"user_id": "cust_1", "is_returning": True}),
+        ]
+
+        # 3. Insert Events into the analytics_events table
+        for name, props in events:
+            cur.execute(
+                "INSERT INTO analytics_events (project_id, event_name, properties) VALUES (%s, %s, %s)",
+                (pizza_id, name, json.dumps(props))
+            )
+        
+        conn.commit()
+        print("✅ Success: Scanalytics Docker DB seeded with Pizza Shop data!")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        if 'conn' in locals():
+            conn.rollback()
+    finally:
+        if 'cur' in locals():
+            cur.close()
+            conn.close()
+
+if __name__ == "__main__":
+    seed_pizza_shop()
