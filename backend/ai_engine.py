@@ -55,9 +55,6 @@ client = instructor.from_openai(
 
 MODEL = os.getenv("AI_MODEL", "google/gemini-2.0-flash-thinking-exp:free")
 
-# --- 4. THE ANALYST AGENT (Chat Window) ---
-# --- INSIDE ai_engine.py ---
-
 def chat_with_analyst(chat_history: List[dict]) -> dict:
     """
     Discusses business needs with the user and proposes a metric plan.
