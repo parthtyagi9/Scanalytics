@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     // 1. Destructure with a fallback to avoid "not iterable" errors
     const body = await req.json();
     const messages = body.messages || body; // Handle both wrapped and unwrapped arrays
+    // Pushing to clear vercel checks
 
     if (!Array.isArray(messages)) {
       throw new Error("Payload 'messages' is missing or not an array");
