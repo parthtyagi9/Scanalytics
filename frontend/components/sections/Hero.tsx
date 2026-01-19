@@ -18,7 +18,7 @@ export default function HeroSection() {
       </div>
 
       {/* 3. NAVIGATION BAR */}
-      <nav className="absolute top-16 w-full max-w-6xl left-1/2 -translate-x-1/2 z-20 px-12">
+      <nav className="absolute top-16 w-full max-w-6xl left-1/2 -translate-x-1/2 z-[9999] px-12">
         <div className="max-w-7xl mx-auto flex justify-between items-center border-white/10 pb-6">
           <div className="flex items-center gap-2 group cursor-pointer">
             <div className="bg-white p-1 transition-transform group-hover:rotate-90">
@@ -32,19 +32,22 @@ export default function HeroSection() {
           <ul className="hidden md:flex items-center gap-10">
             {links.map((link) => (
               <li key={link.title}>
-                <a
-                  href={link.href}
-                  className="text-sm font-bold uppercase hover:text-secondary transition-colors italic"
-                >
-                  [{link.title}]
-                </a>
+                <Link
+  href={`/${link.href}`}  // turns "#pricing" into "/#pricing"
+  className="text-sm font-bold uppercase hover:text-secondary transition-colors italic"
+>
+  [{link.title}]
+</Link>
               </li>
             ))}
-            <Link href="/auth/register">
-              <Button className="rounded-none bg-white text-black font-black uppercase hover:bg-secondary hover:text-white border-2 border-white transition-all shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] hover:shadow-none">
-                Sign Up_
-              </Button>
-            </Link>
+            <li>
+  <Button
+    asChild
+    className="rounded-none bg-white text-black font-black uppercase hover:bg-secondary hover:text-white border-2 border-white transition-all shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] hover:shadow-none"
+  >
+    <Link href="/auth/register">Sign Up_</Link>
+  </Button>
+</li>
           </ul>
         </div>
       </nav>
