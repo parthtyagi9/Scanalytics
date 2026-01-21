@@ -89,7 +89,7 @@ def chat_with_analyst(chat_history: List[dict]) -> dict:
       - `suggested_metrics`: The list of metrics you are currently proposing.
       - `is_ready_to_create`: Boolean. Set to True ONLY when the user explicitly approves the plan.
     """
-
+ 
     try:
         response = client.chat.completions.create(
             model=MODEL,
