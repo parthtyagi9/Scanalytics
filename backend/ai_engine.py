@@ -52,7 +52,7 @@ client = instructor.from_openai(
     ),
     mode=instructor.Mode.JSON
 )
-
+# --- 4. THE ANALYST AGENT (Chat with User) ---
 MODEL = os.getenv("AI_MODEL", "google/gemini-2.0-flash-thinking-exp:free")
 
 def chat_with_analyst(chat_history: List[dict]) -> dict:
