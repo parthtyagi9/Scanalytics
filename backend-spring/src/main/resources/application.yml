@@ -1,0 +1,41 @@
+spring:
+  # --- Database Configuration ---
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:DeltaHacks26}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # --- Spring AI / OpenRouter Configuration ---
+  ai:
+    openai:
+      api-key: ${OPENROUTER_API_KEY:}
+      base-url: https://openrouter.ai/api/v1
+      chat:
+        options:
+          model: ${AI_MODEL:google/gemini-2.0-flash-thinking-exp:free}
+
+  # --- SQL init (uuid-ossp extension + GIN index) ---
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+# --- Server Configuration ---
+server:
+  port: ${PORT:8080}
+
+# --- Logging ---
+logging:
+  level:
+    com.scanalytics: DEBUG
+    org.springframework.ai: DEBUG
